@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>본인부담금 간편조회 - 노리주간보호센터</title>
+<link href="https://cdn.jsdelivr.net/npm/pretendard@3.3.8/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --primary:#2563eb;--primary-dark:#1d4ed8;--bg:#f0f4f8;--card:#fff;
+  --text:#1e293b;--text-light:#64748b;--border:#e2e8f0;
+  --green:#10b981;--orange:#f59e0b;--red:#ef4444;--purple:#8b5cf6;
+  --shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);
+}
+body{font-family:Pretendard,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:0;box-shadow:var(--shadow-lg);}
+.header-inner{max-width:900px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;}
+.header h1{font-size:1.3rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+.btn-back{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.8rem;text-decoration:none;transition:.2s;}
+.btn-back:hover{background:rgba(255,255,255,.25);}
+
+.main{max-width:900px;margin:0 auto;padding:24px;}
+
+/* 조회 카드 */
+.calc-card{background:var(--card);border-radius:16px;padding:28px;box-shadow:var(--shadow-lg);margin-bottom:24px;}
+.calc-title{font-size:1.1rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--primary);}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+@media(max-width:500px){.form-grid{grid-template-columns:1fr;}}
+
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:.82rem;font-weight:600;color:var(--text-light);}
+.form-select{padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:1rem;font-family:inherit;background:#fff;color:var(--text);cursor:pointer;transition:.2s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%2364748b'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+.form-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+
+/* 결과 영역 */
+.result-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;border-radius:14px;padding:24px;text-align:center;transition:.3s;}
+.result-box.highlight{animation:pulse .5s ease;}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+.result-label{font-size:.85rem;color:var(--text-light);margin-bottom:4px;}
+.result-amount{font-size:2.4rem;font-weight:800;color:var(--primary);line-height:1.2;}
+.result-sub{font-size:.82rem;color:var(--text-light);margin-top:8px;}
+.result-detail{display:flex;justify-content:center;gap:24px;margin-top:16px;flex-wrap:wrap;}
+.detail-item{background:#fff;padding:10px 16px;border-radius:10px;font-size:.8rem;box-shadow:var(--shadow);}
+.detail-item .dt{color:var(--text-light);font-size:.72rem;margin-bottom:2px;}
+.detail-item .dd{font-weight:700;color:var(--text);}
+
+/* 한도 정보 */
+.limit-box{margin-top:16px;padding:14px 18px;background:#fef3c7;border:1px solid #fde68a;border-radius:10px;font-size:.82rem;color:#92400e;display:none;}
+.limit-box.show{display:block;}
+.limit-box.warning{background:#fee2e2;border-color:#fecaca;color:#991b1b;}
+
+/* 요금표 */
+.table-card{background:var(--card);border-radius:16px;padding:28px;box-shadow:var(--shadow-lg);margin-bottom:24px;}
+.table-title{font-size:1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.fee-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.fee-table th{background:var(--primary);color:#fff;padding:10px 8px;text-align:center;font-weight:600;white-space:nowrap;}
+.fee-table td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);}
+.fee-table tr:hover td{background:#f8fafc;}
+.fee-table .active-row td{background:#eff6ff;font-weight:700;color:var(--primary);}
+.fee-table .sub{color:var(--text-light);font-size:.75rem;}
+
+/* 안내 */
+.info-card{background:var(--card);border-radius:16px;padding:24px;box-shadow:var(--shadow);margin-bottom:24px;}
+.info-title{font-size:.95rem;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.info-list{list-style:none;font-size:.82rem;color:var(--text-light);line-height:1.8;}
+.info-list li::before{content:"•";color:var(--primary);margin-right:6px;font-weight:700;}
+
+.footer{text-align:center;padding:24px;color:var(--text-light);font-size:.78rem;border-top:1px solid var(--border);margin-top:20px;}
+
+@media(max-width:640px){
+  .main{padding:16px;}
+  .result-amount{font-size:1.8rem;}
+  .result-detail{gap:10px;}
+  .fee-table{font-size:.72rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <h1>💰 본인부담금 간편조회</h1>
+    <span style="font-size:.78rem;opacity:.7;">노리주간보호센터</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 조회 카드 -->
+  <div class="calc-card">
+    <div class="calc-title">📋 조회 조건 선택</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <div class="form-label">이용 일수</div>
+        <select class="form-select" id="selDays" onchange="calculate()">
+          <option value="평일">평일 (월~금, 월평균 20일)</option>
+          <option value="토요일" selected>토요일 포함 (월~토, 월평균 24일)</option>
+          <option value="일요일">일요일 포함 (월~일, 월평균 30일)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">장기요양 등급</div>
+        <select class="form-select" id="selGrade" onchange="calculate()">
+          <option value="1등급">1등급</option>
+          <option value="2등급">2등급</option>
+          <option value="3등급" selected>3등급</option>
+          <option value="4등급">4등급</option>
+          <option value="5등급">5등급</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">본인부담 비율</div>
+        <select class="form-select" id="selRate" onchange="calculate()">
+          <option value="0.15" selected>일반 (15%)</option>
+          <option value="0.09">경감 40% (9%)</option>
+          <option value="0.06">경감 60% (6%)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">식사 횟수</div>
+        <select class="form-select" id="selMeal" onchange="calculate()">
+          <option value="1식">1식 (점심+간식)</option>
+          <option value="2식" selected>2식 (점심+석식+간식)</option>
+          <option value="3식">3식 (조식+점심+석식+간식)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 결과 -->
+    <div class="result-box" id="resultBox">
+      <div class="result-label">월 예상 본인부담금</div>
+      <div class="result-amount" id="resultAmount">-</div>
+      <div class="result-sub" id="resultSub"></div>
+      <div class="result-detail" id="resultDetail"></div>
+    </div>
+
+    <div class="limit-box" id="limitBox"></div>
+  </div>
+
+  <!-- 전체 요금표 -->
+  <div class="table-card">
+    <div class="table-title">📊 등급별 월 이용요금 요약</div>
+    <div style="overflow-x:auto;">
+      <table class="fee-table" id="feeTable">
+        <thead>
+          <tr>
+            <th>등급</th>
+            <th>1일 급여</th>
+            <th>부담비율</th>
+            <th>월~금<br><span class="sub">(20일)</span></th>
+            <th>월~토<br><span class="sub">(24일)</span></th>
+            <th>월~일<br><span class="sub">(30일)</span></th>
+          </tr>
+        </thead>
+        <tbody id="feeBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 안내사항 -->
+  <div class="info-card">
+    <div class="info-title">ℹ️ 안내사항</div>
+    <ul class="info-list">
+      <li>2026년 장기요양 수가 기준 (8시간 이상~10시간 미만, 라-3)</li>
+      <li>비급여 항목: 식사 2,500원/끼 + 간식 1,000원(기본 포함)</li>
+      <li>일요일/공휴일 이용 시 급여비의 30% 가산 적용 (월~일 선택 시 반영)</li>
+      <li>월 15일(1일 8시간) 이상 이용 시 등급별 한도액 10~20% 추가 산정</li>
+      <li>감경 비율은 기초생활수급, 차상위계층 등에 따라 결정됩니다</li>
+      <li>실제 이용요금은 이용일수, 프로그램에 따라 달라질 수 있습니다</li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="footer">
+  © 2026 노리주간보호센터 | 본인부담금 간편조회 v1.0
+</div>
+
+<script>
+// === RAW DATA (엑셀에서 추출) ===
+const DATA = [
+  // [이용일수, 등급, 본인부담비율, 식사횟수, 본인부담금]
+  // --- 평일 (월~금, 20일) ---
+  ["평일","1등급",0.15,"1식",279190],["평일","1등급",0.15,"2식",329190],["평일","1등급",0.15,"3식",379190],["평일","1등급",0.09,"1식",195510],["평일","1등급",0.09,"2식",245510],["평일","1등급",0.09,"3식",295510],["평일","1등급",0.06,"1식",153680],["평일","1등급",0.06,"2식",203680],["평일","1등급",0.06,"3식",253680],
+  ["평일","2등급",0.15,"1식",263770],["평일","2등급",0.15,"2식",313770],["평일","2등급",0.15,"3식",363770],["평일","2등급",0.09,"1식",186260],["평일","2등급",0.09,"2식",236260],["평일","2등급",0.09,"3식",286260],["평일","2등급",0.06,"1식",147510],["평일","2등급",0.06,"2식",197510],["평일","2등급",0.06,"3식",247510],
+  ["평일","3등급",0.15,"1식",248920],["평일","3등급",0.15,"2식",298920],["평일","3등급",0.15,"3식",348920],["평일","3등급",0.09,"1식",177350],["평일","3등급",0.09,"2식",227350],["평일","3등급",0.09,"3식",277350],["평일","3등급",0.06,"1식",141570],["평일","3등급",0.06,"2식",191570],["평일","3등급",0.06,"3식",241570],
+  ["평일","4등급",0.15,"1식",244030],["평일","4등급",0.15,"2식",294030],["평일","4등급",0.15,"3식",344030],["평일","4등급",0.09,"1식",174420],["평일","4등급",0.09,"2식",224420],["평일","4등급",0.09,"3식",274420],["평일","4등급",0.06,"1식",139610],["평일","4등급",0.06,"2식",189610],["평일","4등급",0.06,"3식",239610],
+  ["평일","5등급",0.15,"1식",239080],["평일","5등급",0.15,"2식",289080],["평일","5등급",0.15,"3식",339080],["평일","5등급",0.09,"1식",171450],["평일","5등급",0.09,"2식",221450],["평일","5등급",0.09,"3식",271450],["평일","5등급",0.06,"1식",137630],["평일","5등급",0.06,"2식",187630],["평일","5등급",0.06,"3식",237630],
+  // --- 토요일(월~토, 24일) ---
+  ["토요일","1등급",0.15,"1식",335030],["토요일","1등급",0.15,"2식",395030],["토요일","1등급",0.15,"3식",455030],["토요일","1등급",0.09,"1식",234620],["토요일","1등급",0.09,"2식",294620],["토요일","1등급",0.09,"3식",354620],["토요일","1등급",0.06,"1식",184410],["토요일","1등급",0.06,"2식",244410],["토요일","1등급",0.06,"3식",304410],
+  ["토요일","2등급",0.15,"1식",316520],["토요일","2등급",0.15,"2식",376520],["토요일","2등급",0.15,"3식",436520],["토요일","2등급",0.09,"1식",223510],["토요일","2등급",0.09,"2식",283510],["토요일","2등급",0.09,"3식",343510],["토요일","2등급",0.06,"1식",177010],["토요일","2등급",0.06,"2식",237010],["토요일","2등급",0.06,"3식",297010],
+  ["토요일","3등급",0.15,"1식",298700],["토요일","3등급",0.15,"2식",358700],["토요일","3등급",0.15,"3식",418700],["토요일","3등급",0.09,"1식",212820],["토요일","3등급",0.09,"2식",272820],["토요일","3등급",0.09,"3식",332820],["토요일","3등급",0.06,"1식",169880],["토요일","3등급",0.06,"2식",229880],["토요일","3등급",0.06,"3식",289880],
+  ["토요일","4등급",0.15,"1식",292840],["토요일","4등급",0.15,"2식",352840],["토요일","4등급",0.15,"3식",412840],["토요일","4등급",0.09,"1식",209300],["토요일","4등급",0.09,"2식",269300],["토요일","4등급",0.09,"3식",329300],["토요일","4등급",0.06,"1식",167530],["토요일","4등급",0.06,"2식",227530],["토요일","4등급",0.06,"3식",287530],
+  ["토요일","5등급",0.15,"1식",286900],["토요일","5등급",0.15,"2식",346900],["토요일","5등급",0.15,"3식",406900],["토요일","5등급",0.09,"1식",205740],["토요일","5등급",0.09,"2식",265740],["토요일","5등급",0.09,"3식",325740],["토요일","5등급",0.06,"1식",165160],["토요일","5등급",0.06,"2식",225160],["토요일","5등급",0.06,"3식",285160],
+  // --- 일요일(월~일, 30일) ---
+  ["일요일","1등급",0.15,"1식",432900],["일요일","1등급",0.15,"2식",507900],["일요일","1등급",0.15,"3식",582900],["일요일","1등급",0.09,"1식",301740],["일요일","1등급",0.09,"2식",376740],["일요일","1등급",0.09,"3식",451740],["일요일","1등급",0.06,"1식",236160],["일요일","1등급",0.06,"2식",311160],["일요일","1등급",0.06,"3식",386160],
+  ["일요일","2등급",0.15,"1식",408740],["일요일","2등급",0.15,"2식",483740],["일요일","2등급",0.15,"3식",558740],["일요일","2등급",0.09,"1식",287240],["일요일","2등급",0.09,"2식",362240],["일요일","2등급",0.09,"3식",437240],["일요일","2등급",0.06,"1식",226490],["일요일","2등급",0.06,"2식",301490],["일요일","2등급",0.06,"3식",376490],
+  ["일요일","3등급",0.15,"1식",385460],["일요일","3등급",0.15,"2식",460460],["일요일","3등급",0.15,"3식",535460],["일요일","3등급",0.09,"1식",273280],["일요일","3등급",0.09,"2식",348280],["일요일","3등급",0.09,"3식",423280],["일요일","3등급",0.06,"1식",217180],["일요일","3등급",0.06,"2식",292180],["일요일","3등급",0.06,"3식",367180],
+  ["일요일","4등급",0.15,"1식",377790],["일요일","4등급",0.15,"2식",452790],["일요일","4등급",0.15,"3식",527790],["일요일","4등급",0.09,"1식",268680],["일요일","4등급",0.09,"2식",343680],["일요일","4등급",0.09,"3식",418680],["일요일","4등급",0.06,"1식",214120],["일요일","4등급",0.06,"2식",289120],["일요일","4등급",0.06,"3식",364120],
+  ["일요일","5등급",0.15,"1식",370030],["일요일","5등급",0.15,"2식",445030],["일요일","5등급",0.15,"3식",520030],["일요일","5등급",0.09,"1식",264020],["일요일","5등급",0.09,"2식",339020],["일요일","5등급",0.09,"3식",414020],["일요일","5등급",0.06,"1식",211020],["일요일","5등급",0.06,"2식",286020],["일요일","5등급",0.06,"3식",361020],
+];
+
+// 1일 급여비 (등급별)
+const DAILY = {"1등급":69730,"2등급":64590,"3등급":59640,"4등급":58010,"5등급":56360};
+
+// 월 한도액 (기본/증액)
+const LIMIT = {
+  "1등급":{base:2306400,ext:2537040},
+  "2등급":{base:2083400,ext:2291740},
+  "3등급":{base:1485700,ext:1782840},
+  "4등급":{base:1370600,ext:1644720},
+  "5등급":{base:1177000,ext:1412400}
+};
+
+// 평균 이용일
+const AVG_DAYS = {"평일":20,"토요일":24,"일요일":30};
+
+// 비급여 (간식 1,000원은 기본 포함, 식사는 끼당 2,500원)
+const MEAL_PER_UNIT = 2500;   // 식사 1끼당
+const SNACK_BASE = 1000;      // 간식 (기본 포함)
+const SUNDAY_DAYS = 4.5;      // 월평균 일요일/공휴일 수
+const SUNDAY_SURCHARGE = 0.3; // 공휴일 가산 30%
+
+// 부담비율 라벨
+const RATE_LABEL = {"0.15":"일반(15%)","0.09":"경감40%(9%)","0.06":"경감60%(6%)"};
+const DAYS_LABEL = {"평일":"월~금 (20일)","토요일":"월~토 (24일)","일요일":"월~일 (30일)"};
+
+function fmt(n){ return n.toLocaleString('ko-KR') + '원'; }
+function round10(x){ return Math.round(x / 10) * 10; }
+
+function calculate(){
+  const days = document.getElementById('selDays').value;
+  const grade = document.getElementById('selGrade').value;
+  const rate = parseFloat(document.getElementById('selRate').value);
+  const meal = document.getElementById('selMeal').value;
+
+  // RAW DATA에서 찾기
+  const row = DATA.find(r => r[0]===days && r[1]===grade && r[2]===rate && r[3]===meal);
+  const amount = row ? row[4] : 0;
+
+  // 결과 표시
+  const box = document.getElementById('resultBox');
+  document.getElementById('resultAmount').textContent = fmt(amount);
+  document.getElementById('resultSub').textContent =
+    `${grade} · ${RATE_LABEL[rate]} · ${DAYS_LABEL[days]} · ${meal} 기준`;
+  box.classList.remove('highlight');
+  void box.offsetWidth;
+  box.classList.add('highlight');
+
+  // 상세 내역 (정확한 공식 반영)
+  const avgD = AVG_DAYS[days];
+  const dailyFee = DAILY[grade];
+  const mealCount = parseInt(meal);
+  // 식대 = 식사(끼당 2,500원) + 간식(1,000원 기본)
+  const mealPerDay = MEAL_PER_UNIT * mealCount + SNACK_BASE;
+  const totalMeal = Math.round(mealPerDay * avgD);
+
+  // 급여 본인부담 (10원단위 반올림)
+  const feeCopay = round10(dailyFee * rate * avgD);
+  // 일요일 공휴일 가산 (30%, 월 평균 4.5일)
+  const sundaySurcharge = days === '일요일' ? round10(dailyFee * SUNDAY_SURCHARGE * rate * SUNDAY_DAYS) : 0;
+
+  // ── 한도 초과 계산 ──────────────────────────────────
+  const limit = LIMIT[grade];
+  // 실제 월 총 급여비 (공휴일 가산 포함)
+  const totalInsuranceFee = days === '일요일'
+    ? dailyFee * avgD + Math.round(dailyFee * SUNDAY_SURCHARGE * SUNDAY_DAYS)
+    : dailyFee * avgD;
+
+  let excessInsurance = 0;       // 한도 초과된 급여비
+  let excessCopay = 0;           // 초과분 전액 본인부담
+  let withinLimitCopay = feeCopay + sundaySurcharge;  // 한도 내 본인부담 (기본값)
+  let displayAmount = amount;    // 표시할 최종 합계
+
+  if(totalInsuranceFee > limit.ext){
+    excessInsurance = totalInsuranceFee - limit.ext;
+    excessCopay = Math.round(excessInsurance);
+    withinLimitCopay = round10(limit.ext * rate);  // 한도까지만 비율 적용
+    displayAmount = withinLimitCopay + excessCopay + totalMeal;
+    // 메인 금액 재계산 반영
+    document.getElementById('resultAmount').textContent = fmt(displayAmount);
+  }
+  // ────────────────────────────────────────────────────
+
+  let detailHtml = `
+    <div class="detail-item">
+      <div class="dt">월 급여 총액</div>
+      <div class="dd">${fmt(totalInsuranceFee)}</div>
+    </div>
+    <div class="detail-item">
+      <div class="dt">본인부담금</div>
+      <div class="dd">${fmt(withinLimitCopay)}</div>
+    </div>`;
+  if(excessCopay > 0){
+    detailHtml += `
+    <div class="detail-item" style="border:2px solid #fca5a5;background:#fff1f2;">
+      <div class="dt" style="color:#991b1b;font-weight:700;">⚠️ 초과분 전액부담</div>
+      <div class="dd" style="color:#dc2626;">${fmt(excessCopay)}</div>
+    </div>`;
+  }
+  detailHtml += `
+    <div class="detail-item">
+      <div class="dt">식대 총액</div>
+      <div class="dd">${fmt(totalMeal)}</div>
+    </div>`;
+  document.getElementById('resultDetail').innerHTML = detailHtml;
+
+  // 한도 체크 및 안내 박스
+  const limitBox = document.getElementById('limitBox');
+
+  if(totalInsuranceFee > limit.ext){
+    limitBox.className = 'limit-box show warning';
+    limitBox.innerHTML =
+      `⚠️ <strong>한도 초과:</strong> 월 총 급여비 ${fmt(totalInsuranceFee)}가 증액 한도 ${fmt(limit.ext)}를 초과합니다.<br>
+       　한도 내 ${Math.round(rate*100)}% 부담: <strong>${fmt(withinLimitCopay)}</strong> &nbsp;+&nbsp;
+       한도초과 전액부담: <strong style="color:#dc2626">${fmt(excessCopay)}</strong>
+       &nbsp;= 급여 관련 합계 <strong>${fmt(withinLimitCopay + excessCopay)}</strong>`;
+  } else if(totalInsuranceFee > limit.base){
+    limitBox.className = 'limit-box show';
+    limitBox.innerHTML = `📌 <strong>한도 증액 적용:</strong> 월 15일 이상 이용으로 증액 한도(${fmt(limit.ext)}) 적용. 기본 한도: ${fmt(limit.base)}`;
+  } else {
+    limitBox.className = 'limit-box';
+  }
+
+  // 요금표 업데이트
+  renderTable(days, meal);
+}
+
+function renderTable(days, meal){
+  const rates = [0.15, 0.09, 0.06];
+  const grades = ["1등급","2등급","3등급","4등급","5등급"];
+  const rateLabels = {"0.15":"일반(15%)","0.09":"경감40%","0.06":"경감60%"};
+
+  const selGrade = document.getElementById('selGrade').value;
+  const selRate = parseFloat(document.getElementById('selRate').value);
+
+  let html = '';
+  for(const g of grades){
+    for(let ri=0; ri<rates.length; ri++){
+      const r = rates[ri];
+      const weekday = DATA.find(d=>d[0]==="평일"&&d[1]===g&&d[2]===r&&d[3]===meal);
+      const sat = DATA.find(d=>d[0]==="토요일"&&d[1]===g&&d[2]===r&&d[3]===meal);
+      const sun = DATA.find(d=>d[0]==="일요일"&&d[1]===g&&d[2]===r&&d[3]===meal);
+
+      const isActive = g===selGrade && r===selRate;
+      html += `<tr class="${isActive?'active-row':''}">`;
+      if(ri===0) html += `<td rowspan="3" style="font-weight:700;background:${isActive?'#dbeafe':'#f8fafc'}">${g}<br><span class="sub">${fmt(DAILY[g])}/일</span></td>`;
+      html += `<td>${ri===0?fmt(DAILY[g]):''}</td>`;
+      html += `<td>${rateLabels[r]}</td>`;
+      html += `<td>${weekday?fmt(weekday[4]):'-'}</td>`;
+      html += `<td>${sat?fmt(sat[4]):'-'}</td>`;
+      html += `<td>${sun?fmt(sun[4]):'-'}</td>`;
+      html += '</tr>';
+    }
+  }
+  document.getElementById('feeBody').innerHTML = html;
+}
+
+// 초기 계산
+calculate();
+</script>
+
+</body>
+</html>
