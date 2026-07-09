@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>본인부담금 계산기 | 노리주간보호센터</title>
 <meta name="description" content="노리주간보호센터 본인부담금 간편 계산기. 장기요양 등급, 이용 요일, 식사 횟수를 선택하면 월 예상 비용을 30초 만에 확인할 수 있어요." />
+<meta name="theme-color" content="#FBF3E0" />
+<link rel="icon" type="image/png" href="assets/nori-icon.png" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -33,11 +35,13 @@
 
   .header { text-align: center; margin-bottom: 28px; }
   .chip {
-    display: inline-block; padding: 6px 16px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px 5px 8px; border-radius: 999px;
     font-size: 12px; font-weight: 800; color: #5C3D00; margin-bottom: 12px;
     background: linear-gradient(160deg, #FFE25C, #F5C200);
     box-shadow: 0 6px 16px -4px rgba(235,174,0,0.6), inset 0 1px 0 rgba(255,255,255,0.8);
   }
+  .chip img { height: 18px; width: auto; display: block; }
   .header h1 {
     font-size: 27px; font-weight: 800; color: #5C3D00;
     letter-spacing: -0.5px; text-shadow: 0 1px 0 rgba(255,255,255,0.7);
@@ -151,13 +155,25 @@
   .cta.insta { background: linear-gradient(135deg, #F58529 0%, #DD2A7B 45%, #8134AF 80%, #515BD4 100%); }
 
   .footer { font-size: 11px; color: #ab9a73; line-height: 1.7; padding: 0 6px; }
+
+  .pill:focus-visible, .cta:focus-visible {
+    outline: 2px solid #8A5C00;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="header">
-    <div class="chip">노리주간보호센터</div>
+    <div class="chip"><img src="assets/nori-icon.png" alt="">노리주간보호센터</div>
     <h1>본인부담금 계산기</h1>
     <p>2026년 장기요양 수가 기준 · 30초면 확인할 수 있어요</p>
   </div>
@@ -187,7 +203,7 @@
     </div>
   </div>
 
-  <div class="result">
+  <div class="result" aria-live="polite">
     <div class="result-label">월 예상 본인부담금</div>
     <div class="result-total"><span id="total"></span><small>원</small></div>
     <div class="breakdown">
@@ -262,7 +278,10 @@ function makeBtns(containerId, items, getLabel, isOn, onClick) {
   box.innerHTML = "";
   items.forEach(function (item, i) {
     var b = document.createElement("button");
-    b.className = "pill" + (isOn(item, i) ? " on" : "");
+    var on = isOn(item, i);
+    b.type = "button";
+    b.className = "pill" + (on ? " on" : "");
+    b.setAttribute("aria-pressed", on ? "true" : "false");
     b.innerHTML = getLabel(item, i);
     b.onclick = function () { onClick(item, i); render(); };
     box.appendChild(b);
