@@ -65,9 +65,22 @@
     background: linear-gradient(160deg, rgba(255,255,255,0.65), rgba(255,255,255,0.28));
     border: 1px solid rgba(255,255,255,0.8);
     box-shadow: 0 3px 10px -2px rgba(92,61,0,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
-    transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
+    transition: transform 0.18s cubic-bezier(.34,1.56,.64,1), box-shadow 0.18s cubic-bezier(.34,1.56,.64,1);
   }
   .pill:active { transform: scale(0.95); }
+  @media (hover: hover) {
+    .pill:hover:not(.on) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px -3px rgba(92,61,0,0.2), inset 0 1px 0 rgba(255,255,255,0.95);
+    }
+    .cta:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 14px 26px -8px rgba(92,61,0,0.42),
+        inset 0 1.5px 1px rgba(255,255,255,0.5),
+        inset 0 -2px 5px rgba(0,0,0,0.14);
+    }
+  }
   .pill .sub { display: block; font-size: 10px; font-weight: 500; margin-top: 2px; opacity: 0.8; word-break: keep-all; }
   .pill.on {
     color: #5C3D00;
@@ -152,7 +165,7 @@
       0 10px 22px -8px rgba(92,61,0,0.35),
       inset 0 1.5px 1px rgba(255,255,255,0.5),
       inset 0 -2px 5px rgba(0,0,0,0.14);
-    transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
+    transition: transform 0.18s cubic-bezier(.34,1.56,.64,1), box-shadow 0.18s cubic-bezier(.34,1.56,.64,1);
   }
   .cta:last-child { margin-bottom: 0; }
   .cta:active { transform: scale(0.97) translateY(1px); }
@@ -166,6 +179,24 @@
   .pill:focus-visible, .cta:focus-visible {
     outline: 2px solid #8A5C00;
     outline-offset: 2px;
+  }
+
+  /* 좁은 화면 전용: 하단 고정 총액 바 (탭하면 결과 카드로 스크롤) */
+  .sticky-total { display: none; }
+  @media (max-width: 480px) {
+    html { scroll-behavior: smooth; }
+    body { padding-bottom: 88px; }
+    .sticky-total {
+      position: fixed; left: 12px; right: 12px; bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 13px 18px; border-radius: 18px; text-decoration: none;
+      background: linear-gradient(150deg, #7A5200 0%, #5C3D00 55%, #46300A 100%);
+      color: #fff; z-index: 100;
+      border: 1px solid rgba(255,255,255,0.22);
+      box-shadow: 0 12px 28px -8px rgba(70,48,10,0.55), inset 0 1px 0 rgba(255,231,160,0.4);
+    }
+    .sticky-total .st-label { font-size: 12px; font-weight: 700; color: rgba(255,240,200,0.85); }
+    .sticky-total .st-val { font-size: 18px; font-weight: 800; white-space: nowrap; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -201,6 +232,7 @@
     <div class="sec" id="scheduleSec">
       <div class="sec-title">③ 이용 요일</div>
       <div class="row" id="scheduleBtns"></div>
+      <div class="hint" id="sunHint">☀️ 일요일은 1시간 단축 운영(6~8시간 수가 기준)이라 30%가 가산돼요</div>
     </div>
 
     <div class="sec">
@@ -210,7 +242,7 @@
     </div>
   </div>
 
-  <div class="result" aria-live="polite">
+  <div class="result" id="result" aria-live="polite">
     <div class="result-label">월 예상 본인부담금</div>
     <div class="result-total"><span id="total"></span><small>원</small></div>
     <div class="breakdown">
@@ -229,7 +261,7 @@
     </div>
   </div>
 
-  <div class="warn" id="warnBox">
+  <div class="warn" id="warnBox" role="alert">
     <div class="warn-title">⚠️ 월 한도액 초과 안내</div>
     <div class="warn-body" id="warnBody"></div>
   </div>
@@ -250,6 +282,12 @@
   </div>
 
 </div>
+
+<!-- 좁은 화면 전용 하단 고정 총액 바 — 탭하면 결과 카드로 이동 -->
+<a class="sticky-total" href="#result" aria-label="월 예상 본인부담금 결과로 이동">
+  <span class="st-label">월 예상 본인부담금</span>
+  <span class="st-val"><span id="stickyTotal"></span>원</span>
+</a>
 
 <script>
 // ===== 2026년 주야간보호 수가 (8시간 이상 ~ 10시간 미만) =====
@@ -274,9 +312,9 @@ var BURDEN = [
   { key: 0, label: "기초수급", sub: "0%" }
 ];
 var SCHEDULES = [
-  { label: "월~금", food: 21, sundayDays: 0, note: "월 21일 기준" },
-  { label: "월~토", food: 25, sundayDays: 0, note: "월 25일 기준" },
-  { label: "월~일", food: 30, sundayDays: 5, note: "월 30일 · 일요일은 1시간 단축(6~8시간 수가+30%)" }
+  { label: "월~금", food: 21, sundayDays: 0, note: "월 21일" },
+  { label: "월~토", food: 25, sundayDays: 0, note: "월 25일" },
+  { label: "월~일", food: 30, sundayDays: 5, note: "월 30일" }
 ];
 var MEAL = 2500, SNACK = 1000;
 
@@ -285,45 +323,60 @@ var state = { grade: "3등급", rate: 0.15, schedule: 0, meals: 1 };
 function fmt(n) { return Math.round(n).toLocaleString("ko-KR"); }
 function round10(n) { return Math.round(n / 10) * 10; }
 
+// 버튼은 최초 1회만 생성하고, 이후에는 선택 상태(classList/aria-pressed)만 갱신
+// — 매번 재생성하면 키보드 포커스가 파괴되기 때문.
 function makeBtns(containerId, items, getLabel, isOn, onClick) {
   var box = document.getElementById(containerId);
   box.innerHTML = "";
-  items.forEach(function (item, i) {
+  var btns = items.map(function (item, i) {
     var b = document.createElement("button");
-    var on = isOn(item, i);
     b.type = "button";
-    b.className = "pill" + (on ? " on" : "");
-    b.setAttribute("aria-pressed", on ? "true" : "false");
+    b.className = "pill";
     b.innerHTML = getLabel(item, i);
     b.onclick = function () { onClick(item, i); render(); };
     box.appendChild(b);
+    return b;
   });
+  return function update() {
+    btns.forEach(function (b, i) {
+      var on = isOn(items[i], i);
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  };
 }
+
+var updateGradeBtns = makeBtns("gradeBtns", Object.keys(RATES),
+  function (g) { return g === "인지지원등급" ? "인지지원" : g; },
+  function (g) { return state.grade === g; },
+  function (g) { state.grade = g; });
+
+var updateBurdenBtns = makeBtns("burdenBtns", BURDEN,
+  function (b) { return b.label + ' <span style="font-weight:500;font-size:12px;opacity:.8">(' + b.sub + ")</span>"; },
+  function (b) { return state.rate === b.key; },
+  function (b) { state.rate = b.key; });
+
+var updateScheduleBtns = makeBtns("scheduleBtns", SCHEDULES,
+  function (s) { return s.label + '<span class="sub">(' + s.note + ")</span>"; },
+  function (s, i) { return state.schedule === i; },
+  function (s, i) { state.schedule = i; });
+
+var updateMealBtns = makeBtns("mealBtns", [1, 2, 3],
+  function (m) { return m + "식"; },
+  function (m) { return state.meals === m; },
+  function (m) { state.meals = m; });
 
 function render() {
   var isCog = state.grade === "인지지원등급";
 
-  makeBtns("gradeBtns", Object.keys(RATES),
-    function (g) { return g === "인지지원등급" ? "인지지원" : g; },
-    function (g) { return state.grade === g; },
-    function (g) { state.grade = g; });
-
-  makeBtns("burdenBtns", BURDEN,
-    function (b) { return b.label + ' <span style="font-weight:500;font-size:12px;opacity:.8">(' + b.sub + ")</span>"; },
-    function (b) { return state.rate === b.key; },
-    function (b) { state.rate = b.key; });
-
-  makeBtns("scheduleBtns", SCHEDULES,
-    function (s) { return s.label + '<span class="sub">' + s.note + "</span>"; },
-    function (s, i) { return state.schedule === i; },
-    function (s, i) { state.schedule = i; });
-
-  makeBtns("mealBtns", [1, 2, 3],
-    function (m) { return m + "식"; },
-    function (m) { return state.meals === m; },
-    function (m) { state.meals = m; });
+  updateGradeBtns();
+  updateBurdenBtns();
+  updateScheduleBtns();
+  updateMealBtns();
 
   document.getElementById("cogHint").style.display = isCog ? "block" : "none";
+  // 일요일 가산 상세 안내는 버튼 안 잔글씨 대신 월~일 선택 시에만 표시
+  document.getElementById("sunHint").style.display = (!isCog && state.schedule === 2) ? "block" : "none";
   document.getElementById("scheduleSec").style.display = isCog ? "none" : "block";
   document.getElementById("mealTitle").textContent = (isCog ? "③" : "④") + " 하루 식사 횟수";
 
@@ -348,12 +401,21 @@ function render() {
   var total = careCost + mealCost + snackCost;
 
   document.getElementById("total").textContent = fmt(total);
+  document.getElementById("stickyTotal").textContent = fmt(total);
   document.getElementById("careCost").textContent = fmt(careCost) + "원";
   document.getElementById("mealCost").textContent = fmt(mealCost) + "원";
   document.getElementById("snackCost").textContent = fmt(snackCost) + "원";
-  document.getElementById("careFormula").textContent = sundayDays
-    ? fmt(fee) + "원×" + normalDays + "일+" + fmt(sundayFee) + "원×" + sundayDays + "일×130%, × " + Math.round(state.rate * 100) + "%"
-    : fmt(fee) + "원 × " + normalDays + "일 × " + Math.round(state.rate * 100) + "%";
+  // 한도 초과 시 "수가×일수×부담률"만 쓰면 실제 금액과 수식이 모순되므로
+  // "한도 내 + 한도 초과(전액 본인부담)"로 분해해 표기 (계산 자체는 불변)
+  if (overLimit > 0) {
+    var withinCost = round10(withinLimit * state.rate);
+    document.getElementById("careFormula").textContent =
+      "한도 내 " + fmt(withinCost) + "원 + 한도 초과 " + fmt(careCost - withinCost) + "원(전액 본인부담)";
+  } else {
+    document.getElementById("careFormula").textContent = sundayDays
+      ? fmt(fee) + "원×" + normalDays + "일+" + fmt(sundayFee) + "원×" + sundayDays + "일×130%, × " + Math.round(state.rate * 100) + "%"
+      : fmt(fee) + "원 × " + normalDays + "일 × " + Math.round(state.rate * 100) + "%";
+  }
   document.getElementById("mealFormula").textContent =
     "2,500원 × " + state.meals + "식 × " + foodDays + "일";
   document.getElementById("snackFormula").textContent =
