@@ -245,7 +245,7 @@
 
   <div class="footer">
     · 월 이용일수는 평균 기준이며, 실제 청구액은 해당 월의 이용일수에 따라 달라질 수 있어요<br/>
-    · 일요일·공휴일 이용 시 수가의 30%가 가산돼요<br/>
+    · 일요일은 1시간 단축 운영(6~8시간 수가 기준)하며 30%가 가산돼요<br/>
     · 식대·간식비는 비급여 항목으로 본인부담률과 관계없이 동일하게 적용돼요
   </div>
 
@@ -256,6 +256,11 @@
 var RATES = {
   "1등급": 69730, "2등급": 64590, "3등급": 59640,
   "4등급": 58010, "5등급": 56360, "인지지원등급": 56360
+};
+// 일요일은 1시간 단축 운영으로 6시간이상~8시간미만 수가에 30% 가산하여 계산
+var SUNDAY_RATES = {
+  "1등급": 56060, "2등급": 51930, "3등급": 47940,
+  "4등급": 46300, "5등급": 44650, "인지지원등급": 44650
 };
 // 2026년 등급별 월 한도액 [기본한도, 증액배수(월 15일 이상 이용 시)]
 var LIMITS = {
@@ -269,9 +274,9 @@ var BURDEN = [
   { key: 0, label: "기초수급", sub: "0%" }
 ];
 var SCHEDULES = [
-  { label: "월~금", food: 21, equiv: 21, note: "월 21일 기준" },
-  { label: "월~토", food: 25, equiv: 25, note: "월 25일 기준" },
-  { label: "월~일", food: 30, equiv: 31.5, note: "월 30일 · 일요일 30% 가산" }
+  { label: "월~금", food: 21, sundayDays: 0, note: "월 21일 기준" },
+  { label: "월~토", food: 25, sundayDays: 0, note: "월 25일 기준" },
+  { label: "월~일", food: 30, sundayDays: 5, note: "월 30일 · 일요일은 1시간 단축(6~8시간 수가+30%)" }
 ];
 var MEAL = 2500, SNACK = 1000;
 
@@ -324,10 +329,12 @@ function render() {
 
   var sch = SCHEDULES[state.schedule];
   var foodDays = isCog ? 12 : sch.food;
-  var equivDays = isCog ? 12 : sch.equiv;
   var fee = RATES[state.grade];
+  var sundayFee = SUNDAY_RATES[state.grade];
+  var sundayDays = isCog ? 0 : (sch.sundayDays || 0);
+  var normalDays = isCog ? 12 : (sch.food - sundayDays);
 
-  var feeTotal = fee * equivDays;
+  var feeTotal = fee * normalDays + sundayFee * sundayDays * 1.3;
   // 월 한도액을 넘는 급여비용은 본인부담률과 무관하게 초과분 전액이 본인부담이 된다
   // (인지지원등급은 한도 적용 대상 아님).
   var limitForCost = (!isCog && LIMITS[state.grade])
@@ -344,8 +351,9 @@ function render() {
   document.getElementById("careCost").textContent = fmt(careCost) + "원";
   document.getElementById("mealCost").textContent = fmt(mealCost) + "원";
   document.getElementById("snackCost").textContent = fmt(snackCost) + "원";
-  document.getElementById("careFormula").textContent =
-    fmt(fee) + "원 × " + equivDays + "일 × " + Math.round(state.rate * 100) + "%";
+  document.getElementById("careFormula").textContent = sundayDays
+    ? fmt(fee) + "원×" + normalDays + "일+" + fmt(sundayFee) + "원×" + sundayDays + "일×130%, × " + Math.round(state.rate * 100) + "%"
+    : fmt(fee) + "원 × " + normalDays + "일 × " + Math.round(state.rate * 100) + "%";
   document.getElementById("mealFormula").textContent =
     "2,500원 × " + state.meals + "식 × " + foodDays + "일";
   document.getElementById("snackFormula").textContent =
