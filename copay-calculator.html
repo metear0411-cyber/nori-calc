@@ -68,7 +68,7 @@
     transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
   }
   .pill:active { transform: scale(0.95); }
-  .pill .sub { display: block; font-size: 10px; font-weight: 500; margin-top: 2px; opacity: 0.8; }
+  .pill .sub { display: block; font-size: 10px; font-weight: 500; margin-top: 2px; opacity: 0.8; word-break: keep-all; }
   .pill.on {
     color: #5C3D00;
     background: linear-gradient(160deg, #FFE25C 0%, #F5C200 55%, #EBAE00 100%);
@@ -159,7 +159,7 @@
   .cta.naver { background: linear-gradient(160deg, #1FD673, #03C75A 60%, #02A94C); }
   .cta.kakao { background: linear-gradient(160deg, #FFEE60, #FEE500 60%, #F2D400); color: #191919; }
   .cta.phone { background: linear-gradient(160deg, #A6730A, #8A5C00 60%, #6E4900); }
-  .cta.insta { background: linear-gradient(135deg, #F58529 0%, #DD2A7B 45%, #8134AF 80%, #515BD4 100%); }
+  .cta.insta { background: linear-gradient(135deg, #F58529 0%, #DD2A7B 45%, #8134AF 80%, #515BD4 100%); text-shadow: 0 1px 3px rgba(0,0,0,0.45); }
 
   .footer { font-size: 11px; color: #7d6a42; line-height: 1.7; padding: 0 6px; }
 
@@ -328,7 +328,14 @@ function render() {
   var fee = RATES[state.grade];
 
   var feeTotal = fee * equivDays;
-  var careCost = state.rate === 0 ? 0 : round10(feeTotal * state.rate);
+  // 월 한도액을 넘는 급여비용은 본인부담률과 무관하게 초과분 전액이 본인부담이 된다
+  // (인지지원등급은 한도 적용 대상 아님).
+  var limitForCost = (!isCog && LIMITS[state.grade])
+    ? Math.round(LIMITS[state.grade][0] * LIMITS[state.grade][1])
+    : Infinity;
+  var withinLimit = Math.min(feeTotal, limitForCost);
+  var overLimit = Math.max(0, feeTotal - limitForCost);
+  var careCost = round10(withinLimit * state.rate + overLimit);
   var mealCost = MEAL * state.meals * foodDays;
   var snackCost = SNACK * foodDays;
   var total = careCost + mealCost + snackCost;
@@ -344,18 +351,15 @@ function render() {
   document.getElementById("snackFormula").textContent =
     "1,000원 × " + foodDays + "일";
 
-  // 한도 체크 (인지지원 제외)
+  // 한도 초과 경고 (인지지원 제외, 위에서 계산한 limitForCost/overLimit 재사용)
   var warn = document.getElementById("warnBox");
-  if (!isCog && LIMITS[state.grade]) {
-    var limit = Math.round(LIMITS[state.grade][0] * LIMITS[state.grade][1]);
-    if (feeTotal > limit) {
-      warn.style.display = "block";
-      document.getElementById("warnBody").innerHTML =
-        "이 조건의 급여비용 총액(" + fmt(feeTotal) + "원)이 " + state.grade +
-        " 월 한도액(" + fmt(limit) + "원)을 <b>" + fmt(feeTotal - limit) +
-        "원 초과</b>해요. 초과분은 전액 본인부담이 되어 실제 금액이 달라질 수 있으니, " +
-        "이용 일수 조정 등 자세한 내용은 센터로 문의해 주세요.";
-    } else { warn.style.display = "none"; }
+  if (!isCog && overLimit > 0) {
+    warn.style.display = "block";
+    document.getElementById("warnBody").innerHTML =
+      "이 조건의 급여비용 총액(" + fmt(feeTotal) + "원)이 " + state.grade +
+      " 월 한도액(" + fmt(limitForCost) + "원)을 <b>" + fmt(overLimit) +
+      "원 초과</b>해요. 초과분은 전액 본인부담이 되어 위 금액에 이미 반영했어요. " +
+      "이용 일수 조정 등 자세한 내용은 센터로 문의해 주세요.";
   } else { warn.style.display = "none"; }
 }
 
