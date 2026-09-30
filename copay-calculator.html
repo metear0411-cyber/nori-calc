@@ -7,11 +7,22 @@
 <meta name="description" content="노리주간보호센터 본인부담금 간편 계산기. 장기요양 등급, 이용 요일, 식사 횟수를 선택하면 월 예상 비용을 30초 만에 확인할 수 있어요." />
 <meta name="theme-color" content="#FBF3E0" />
 <link rel="icon" type="image/png" href="assets/nori-icon.png" />
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css" integrity="sha384-2nNKoOPayicGa+aRguOQuiZP+RqQ4G3jalfDeOgftkKD7zBM2gJXTwcFqCZltdv0" />
 <style>
+  /* 노리 패밀리 토큰(~/server/docs/nori-family/nori-family.css)에서 이 페이지가 쓰는 것만.
+     공개 페이지라 바탕은 포털과 같은 #FBF3E0를 유지한다. */
+  :root {
+    --nf-portal-bg: #FBF3E0;
+    --nf-ink-3: #7D6A42;
+    --nf-pine: #2F6E5E;
+    --nf-font: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
-    background: #FBF3E0;
+    font-family: var(--nf-font);
+    background: var(--nf-portal-bg);
+    word-break: keep-all;
+    overflow-wrap: break-word;
     min-height: 100vh;
     padding: 28px 16px;
     -webkit-tap-highlight-color: transparent;
@@ -45,8 +56,9 @@
   .header h1 {
     font-size: 27px; font-weight: 800; color: #5C3D00;
     letter-spacing: -0.5px; text-shadow: 0 1px 0 rgba(255,255,255,0.7);
+    text-wrap: balance;
   }
-  .header p { font-size: 12px; color: #7d6a42; margin-top: 6px; }
+  .header p { font-size: 12px; color: var(--nf-ink-3); margin-top: 6px; }
 
   .sec { margin-bottom: 24px; }
   .sec:last-child { margin-bottom: 0; }
@@ -81,7 +93,7 @@
         inset 0 -2px 5px rgba(0,0,0,0.14);
     }
   }
-  .pill .sub { display: block; font-size: 10px; font-weight: 500; margin-top: 2px; opacity: 0.8; word-break: keep-all; }
+  .pill .sub { display: block; font-size: 10px; font-weight: 500; margin-top: 2px; word-break: keep-all; }
   .pill.on {
     color: #5C3D00;
     background: linear-gradient(160deg, #FFE25C 0%, #F5C200 55%, #EBAE00 100%);
@@ -99,7 +111,7 @@
     font-size: 11px; font-weight: 900; color: #5C3D00;
   }
 
-  .note { font-size: 11px; color: #7d6a42; margin-top: 8px; }
+  .note { font-size: 11px; color: var(--nf-ink-3); margin-top: 8px; }
   .hint {
     display: none; margin-top: 10px; padding: 10px 14px;
     font-size: 12px; color: #5C3D00; border-radius: 16px;
@@ -132,6 +144,7 @@
   .result-label { font-size: 14px; color: rgba(255,240,200,0.85); margin-bottom: 4px; }
   .result-total {
     font-size: 42px; font-weight: 800; line-height: 1.2; margin-bottom: 16px;
+    font-variant-numeric: tabular-nums;
     text-shadow: 0 2px 8px rgba(0,0,0,0.25);
   }
   .result-total small { font-size: 24px; font-weight: 700; }
@@ -140,7 +153,7 @@
   .bd-row:last-child { margin-bottom: 0; }
   .bd-name { color: rgba(255,244,215,0.85); }
   .bd-formula { font-size: 11px; color: rgba(255,244,215,0.8); margin-top: 1px; }
-  .bd-val { font-weight: 700; white-space: nowrap; }
+  .bd-val { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
 
   .warn {
     display: none; padding: 16px; margin-bottom: 20px;
@@ -155,7 +168,7 @@
   .warn-body { font-size: 12px; line-height: 1.6; }
 
   .cta-head { text-align: center; font-weight: 800; color: #5C3D00; margin-bottom: 4px; }
-  .cta-sub { text-align: center; font-size: 12px; color: #7d6a42; margin-bottom: 16px; }
+  .cta-sub { text-align: center; font-size: 12px; color: var(--nf-ink-3); margin-bottom: 16px; }
   .cta {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     width: 100%; padding: 14px; border-radius: 18px; margin-bottom: 10px;
@@ -174,10 +187,11 @@
   .cta.phone { background: linear-gradient(160deg, #A6730A, #8A5C00 60%, #6E4900); }
   .cta.insta { background: linear-gradient(135deg, #F58529 0%, #DD2A7B 45%, #8134AF 80%, #515BD4 100%); text-shadow: 0 1px 3px rgba(0,0,0,0.45); }
 
-  .footer { font-size: 11px; color: #7d6a42; line-height: 1.7; padding: 0 6px; }
+  .footer { font-size: 11px; color: var(--nf-ink-3); line-height: 1.7; padding: 0 6px; }
 
-  .pill:focus-visible, .cta:focus-visible {
-    outline: 2px solid #8A5C00;
+  /* 포커스 링: 패밀리 공통 파인 그린(바탕 대비 5.4:1). 하단 총액 바에도 건다. */
+  .pill:focus-visible, .cta:focus-visible, .sticky-total:focus-visible {
+    outline: 2px solid var(--nf-pine);
     outline-offset: 2px;
   }
 
@@ -196,7 +210,7 @@
       box-shadow: 0 12px 28px -8px rgba(70,48,10,0.55), inset 0 1px 0 rgba(255,231,160,0.4);
     }
     .sticky-total .st-label { font-size: 12px; font-weight: 700; color: rgba(255,240,200,0.85); }
-    .sticky-total .st-val { font-size: 18px; font-weight: 800; white-space: nowrap; }
+    .sticky-total .st-val { font-size: 18px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
   }
 
   @media (prefers-reduced-motion: reduce) {
